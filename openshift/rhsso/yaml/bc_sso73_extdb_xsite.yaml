@@ -1,0 +1,38 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  creationTimestamp: 2019-05-07T08:27:49Z
+  labels:
+    app: sso73-https-external-db-xsite
+    application: sso
+    rh-sso: rh-sso-7.3-v0.1-terna
+    template: sso73-https-external-db-xsite
+  name: sso73-oracle-bc
+spec:
+  failedBuildsHistoryLimit: 5
+  nodeSelector: null
+  output:
+    to:
+      kind: ImageStreamTag
+      name: sso-terna:latest
+  postCommit: {}
+  resources: {}
+  runPolicy: Serial
+  source:
+    contextDir: openshift/rhsso/build
+    git:
+      uri: git@github.com:fceresol/rhsso-xsite-ext-db.git
+    sourceSecret:
+      name: sshkey-sso
+    type: Git
+  strategy:
+    dockerStrategy:
+      from:
+        kind: ImageStreamTag
+        name: redhat-sso73-openshift:1.0
+        namespace: openshift
+    type: Docker
+  successfulBuildsHistoryLimit: 5
+  triggers: []
+status:
+  lastVersion: 13
