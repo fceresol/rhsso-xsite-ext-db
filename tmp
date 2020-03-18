@@ -1,0 +1,8 @@
+oc new-app datagrid-service \
+  -p APPLICATION_NAME=datagrid-service-xsite-hello-world \
+  -e USER_CONFIG_MAP=true \
+  -e SCRIPT_DEBUG=true \
+  -e JAVA_OPTS_APPEND="-Djboss.bind.ext_address=${extAddr}
+    -Djboss.bind.ext_port=${nodePort}
+    -Djboss.relay.site=${siteName}
+    -Djboss.relay.global_cluster=${discovery}"
