@@ -142,12 +142,6 @@
                     <driver name="h2" module="com.h2database.h2">
                         <xa-datasource-class>org.h2.jdbcx.JdbcDataSource</xa-datasource-class>
                     </driver>
-                    <driver name="mysql" module="com.mysql">
-                        <xa-datasource-class>com.mysql.jdbc.jdbc2.optional.MysqlXADataSource</xa-datasource-class>
-                    </driver>
-                    <driver name="postgresql" module="org.postgresql">
-                        <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
-                    </driver>
                     <!-- ##DRIVERS## -->
                 </drivers>
             </datasources>
@@ -166,11 +160,14 @@
                 <transport channel="cluster"/>
                 <global-state/>
                 <distributed-cache name="default"/>
-                                <replicated-cache-configuration name="sessions-cfg" mode="SYNC" start="EAGER" batching="false">
+                <replicated-cache-configuration name="sessions-cfg" mode="SYNC" start="EAGER" batching="false">
                     <transaction mode="NON_DURABLE_XA" locking="PESSIMISTIC"/>
                     <locking acquire-timeout="0" />
                     <backups>
-                        <backup site="marcigliana" failure-policy="FAIL" strategy="SYNC" enabled="true">
+                        <backup site="${env.JBOSS_RELAY_SITE1:site1}" failure-policy="FAIL" strategy="SYNC" enabled="true">
+                            <take-offline min-wait="60000" after-failures="3" />
+                        </backup>
+                        <backup site="${env.JBOSS_RELAY_SITE2:site2}" failure-policy="FAIL" strategy="SYNC" enabled="true">
                             <take-offline min-wait="60000" after-failures="3" />
                         </backup>
                     </backups>
@@ -189,7 +186,6 @@
         <subsystem xmlns="urn:infinispan:server:jgroups:9.4">
             <channels default="cluster">
                 <channel name="cluster" stack="tcp"/>
-                <channel name="xsite" stack="tcp"/>
                 <!-- xsite mod:start -->
                 <channel name="global" stack="relay-global"/>
                 <!-- xsite mod:end -->
@@ -230,9 +226,9 @@
                     <protocol type="MFC"/>
                     <protocol type="FRAG3"/>
                     <!-- xsite mod:start -->
-                    <relay site="${jboss.relay.site:stage}">
-                        <remote-site name="marcigliana" stack="relay-global" cluster="global"/>
-                        <remote-site name="palmiano" stack="relay-global" cluster="global"/>
+                    <relay site="${env.JBOSS_RELAY_SITE_LOCAL:site1}">
+                        <remote-site name="${env.JBOSS_RELAY_SITE1:site1}" stack="relay-global" cluster="global"/>
+                        <remote-site name="${env.JBOSS_RELAY_SITE2:site2}" stack="relay-global" cluster="global"/>
                         <property name="relay_multicasts">false</property>
                         <property name="max_site_masters">1000</property>
                     </relay>
@@ -245,7 +241,7 @@
                         <property name="external_port">${jboss.bind.ext_port:8660}</property>
                     </transport>
                     <protocol type="TCPPING">
-                        <property name="initial_hosts">${jboss.relay.global_cluster:127.0.0.1[8660]}</property>
+                        <property name="initial_hosts">${env.JBOSS_RELAY_GLOBAL_CLUSTER:127.0.0.1[8660]}</property>
                     </protocol>
                     <protocol type="MERGE3"/>
                     <protocol type="FD_SOCK" socket-binding="jgroups-tcp-fd">

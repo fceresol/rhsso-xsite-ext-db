@@ -1,0 +1,14 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  annotations:
+    openshift.io/host.generated: 'true'
+  description: Route for application's https service.
+  labels:
+    application: sso
+  name: sso
+spec:
+  tls:
+    termination: reencrypt
+  to:
+    name: sso

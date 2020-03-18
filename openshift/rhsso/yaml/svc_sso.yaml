@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    description: The web server's https port.
+    service.alpha.openshift.io/serving-cert-secret-name: sso-x509-https-secret
+  labels:
+    application: sso
+  name: sso
+spec:
+  ports:
+  - port: 8443
+    targetPort: 8443
+  selector:
+    deploymentConfig: sso

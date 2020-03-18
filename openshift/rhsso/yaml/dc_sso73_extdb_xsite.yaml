@@ -98,9 +98,9 @@ spec:
         - name: HTTPS_PROXY
         - name: INFINISPAN_LOG_LEVEL
           value: DEBUG
-        - env: REMOTE_CACHE_HOST
+        - name: REMOTE_CACHE_HOST
           value: localhost
-        - env: REMOTE_CACHE_PORT
+        - name: REMOTE_CACHE_PORT
           value: "11222"
         envFrom:
         - secretRef:

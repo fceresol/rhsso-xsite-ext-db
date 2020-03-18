@@ -1,0 +1,313 @@
+{
+    "kind": "List",
+    "apiVersion": "v1",
+    "metadata": {},
+    "items": [
+        {
+            "apiVersion": "v1",
+            "kind": "Secret",
+            "metadata": {
+                "labels": {
+                    "application": "datagrid-service",
+                    "template": "datagrid-service-xsite"
+                },
+                "name": "datagrid-service"
+            },
+            "stringData": {
+                "application-password": "etCJUS6vBRdDUpvQ",
+                "application-user": ""
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "description": "Provides a ping service for clustered applications.",
+                    "service.alpha.kubernetes.io/tolerate-unready-endpoints": "true"
+                },
+                "labels": {
+                    "application": "datagrid-service",
+                    "template": "datagrid-service-xsite"
+                },
+                "name": "datagrid-service-ping"
+            },
+            "spec": {
+                "clusterIP": "None",
+                "ports": [
+                    {
+                        "name": "ping",
+                        "port": 8888
+                    }
+                ],
+                "selector": {
+                    "deploymentConfig": "datagrid-service"
+                }
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "description": "Provides a service for cross-site replication.",
+                    "service.alpha.kubernetes.io/tolerate-unready-endpoints": "true"
+                },
+                "labels": {
+                    "application": "datagrid-service",
+                    "template": "datagrid-service-xsite"
+                },
+                "name": "datagrid-service-xsite"
+            },
+            "spec": {
+                "ports": [
+                    {
+                        "nodePort": 32660,
+                        "port": 8660,
+                        "targetPort": 8660
+                    }
+                ],
+                "selector": {
+                    "deploymentConfig": "datagrid-service"
+                },
+                "type": "NodePort"
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "description": "Provides a service for accessing the application over HTTPS or Hot Rod protocol.",
+                    "service.alpha.openshift.io/serving-cert-secret-name": "service-certs"
+                },
+                "labels": {
+                    "application": "datagrid-service",
+                    "template": "datagrid-service-xsite"
+                },
+                "name": "datagrid-service"
+            },
+            "spec": {
+                "ports": [
+                    {
+                        "name": "hotrod",
+                        "port": 11222,
+                        "targetPort": 11222
+                    },
+                    {
+                        "name": "https",
+                        "port": 8443,
+                        "targetPort": 8443
+                    }
+                ],
+                "selector": {
+                    "deploymentConfig": "datagrid-service"
+                }
+            }
+        },
+        {
+            "apiVersion": "apps/v1beta1",
+            "kind": "StatefulSet",
+            "metadata": {
+                "labels": {
+                    "application": "datagrid-service",
+                    "template": "datagrid-service-xsite"
+                },
+                "name": "datagrid-service"
+            },
+            "spec": {
+                "replicas": 1,
+                "serviceName": "datagrid-service-ping",
+                "strategy": {
+                    "rollingParams": {
+                        "intervalSeconds": 20,
+                        "maxSurge": 1,
+                        "maxUnavailable": 1,
+                        "timeoutSeconds": 1200,
+                        "updatePeriodSeconds": 20
+                    },
+                    "type": "Rolling"
+                },
+                "template": {
+                    "metadata": {
+                        "labels": {
+                            "application": "datagrid-service",
+                            "deploymentConfig": "datagrid-service"
+                        },
+                        "name": "datagrid-service"
+                    },
+                    "spec": {
+                        "containers": [
+                            {
+                                "env": [
+                                    {
+                                        "name": "USER_CONFIG_MAP",
+                                        "value": "true"
+                                    },
+                                    {
+                                        "name": "SERVICE_NAME",
+                                        "value": "datagrid-service"
+                                    },
+                                    {
+                                        "name": "SERVICE_PROFILE",
+                                        "value": "datagrid-service"
+                                    },
+                                    {
+                                        "name": "JGROUPS_PING_PROTOCOL",
+                                        "value": "openshift.DNS_PING"
+                                    },
+                                    {
+                                        "name": "JBOSS_RELAY_SITE_LOCAL",
+                                        "value": "marcigliana"
+                                    },
+                                    {
+                                        "name": "JBOSS_RELAY_SITE1",
+                                        "value": "palmiano"
+                                    },
+                                    {
+                                        "name": "JBOSS_RELAY_SITE2",
+                                        "value": "marcigliana"
+                                    },
+                                    {
+                                        "name": "JBOSS_RELAY_GLOBAL_CLUSTER",
+                                        "value": "192.168.99.126[8660],192.168.99.125[8660]"
+                                    },
+                                    {
+                                        "name": "USERNAME",
+                                        "valueFrom": {
+                                            "secretKeyRef": {
+                                                "key": "application-user",
+                                                "name": "datagrid-service"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "name": "PASSWORD",
+                                        "valueFrom": {
+                                            "secretKeyRef": {
+                                                "key": "application-password",
+                                                "name": "datagrid-service"
+                                            }
+                                        }
+                                    }
+                                ],
+                                "image": "registry.redhat.io/jboss-datagrid-7/datagrid73-openshift",
+                                "livenessProbe": {
+                                    "exec": {
+                                        "command": [
+                                            "/opt/datagrid/bin/livenessProbe.sh"
+                                        ]
+                                    },
+                                    "failureThreshold": 5,
+                                    "initialDelaySeconds": 15,
+                                    "periodSeconds": 20,
+                                    "successThreshold": 1,
+                                    "timeoutSeconds": 10
+                                },
+                                "name": "datagrid-service",
+                                "ports": [
+                                    {
+                                        "containerPort": 8443,
+                                        "name": "https",
+                                        "protocol": "TCP"
+                                    },
+                                    {
+                                        "containerPort": 8888,
+                                        "name": "ping",
+                                        "protocol": "TCP"
+                                    },
+                                    {
+                                        "containerPort": 11222,
+                                        "name": "hotrod",
+                                        "protocol": "TCP"
+                                    }
+                                ],
+                                "readinessProbe": {
+                                    "exec": {
+                                        "command": [
+                                            "/opt/datagrid/bin/readinessProbe.sh"
+                                        ]
+                                    },
+                                    "failureThreshold": 5,
+                                    "initialDelaySeconds": 17,
+                                    "periodSeconds": 10,
+                                    "successThreshold": 1,
+                                    "timeoutSeconds": 10
+                                },
+                                "resources": {
+                                    "limits": {
+                                        "memory": "512Mi"
+                                    },
+                                    "requests": {
+                                        "cpu": "0.5",
+                                        "memory": "512Mi"
+                                    }
+                                },
+                                "volumeMounts": [
+                                    {
+                                        "mountPath": "/opt/datagrid/standalone/data",
+                                        "name": "srv-data"
+                                    },
+                                    {
+                                        "mountPath": "/var/run/secrets/java.io/keystores",
+                                        "name": "keystore-volume"
+                                    },
+                                    {
+                                        "mountPath": "/var/run/secrets/openshift.io/serviceaccount",
+                                        "name": "service-certs"
+                                    },
+                                    {
+                                        "mountPath": "/opt/datagrid/standalone/configuration/user",
+                                        "name": "config-volume",
+                                        "readOnly": true
+                                    }
+                                ]
+                            }
+                        ],
+                        "terminationGracePeriodSeconds": 60,
+                        "volumes": [
+                            {
+                                "empty-dir": {},
+                                "name": "keystore-volume"
+                            },
+                            {
+                                "name": "service-certs",
+                                "secret": {
+                                    "secretName": "service-certs"
+                                }
+                            },
+                            {
+                                "configMap": {
+                                    "name": "datagrid-config"
+                                },
+                                "name": "config-volume"
+                            }
+                        ]
+                    }
+                },
+                "triggers": [
+                    {
+                        "type": "ConfigChange"
+                    }
+                ],
+                "volumeClaimTemplates": [
+                    {
+                        "metadata": {
+                            "name": "srv-data"
+                        },
+                        "spec": {
+                            "accessModes": [
+                                "ReadWriteOnce"
+                            ],
+                            "resources": {
+                                "requests": {
+                                    "storage": "1Gi"
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}
