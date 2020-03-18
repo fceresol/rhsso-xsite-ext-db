@@ -16,6 +16,8 @@ module add --name=com.oracle.jdbc --resources=/opt/eap/extensions/ojdbc8.jar --d
 /subsystem=datasources/data-source=KeycloakDS:write-attribute(name="exception-sorter-class-name", value="org.jboss.jca.adapters.jdbc.extensions.oracle.OracleExceptionSorter")
 
 ### end of datasource creation
+run-batch
+batch
 ### configuring caches
 
 ### creating remote socket binding
@@ -32,8 +34,11 @@ module add --name=com.oracle.jdbc --resources=/opt/eap/extensions/ojdbc8.jar --d
 /subsystem=infinispan/cache-container=keycloak/distributed-cache=offlineClientSessions/store=remote:add(cache="offlineClientSessions",remote-servers=[remote-cache], passivation="false", fetch-state="false", purge="false", preload="false", shared="true")
 /subsystem=infinispan/cache-container=keycloak/distributed-cache=loginFailures/store=remote:add(cache="loginFailures",remote-servers=[remote-cache], passivation="false", fetch-state="false", purge="false", preload="false", shared="true")
 /subsystem=infinispan/cache-container=keycloak/distributed-cache=actionTokens/store=remote:add(cache="actionTokens",remote-servers=[remote-cache], passivation="false", fetch-state="false", purge="false", preload="false", shared="true")
-/subsystem=infinispan/cache-container=keycloak/replicated-cache=work/store=remote:add(cache="work",remote-servers=[remote-cache], passivation="false", fetch-state="false", purge="false", preload="false", shared="true")
 
+/subsystem=infinispan/cache-container=keycloak/replicated-cache=work/store=remote:add(cache="work",remote-servers=[remote-cache], passivation="false", fetch-state="false", purge="false", preload="false", shared="true")
+run-batch
+
+batch
 /subsystem=infinispan/cache-container=keycloak/distributed-cache=sessions/store=remote/property=rawValues:add(value=true)
 /subsystem=infinispan/cache-container=keycloak/distributed-cache=sessions/store=remote/property=marshaller:add(value="org.keycloak.cluster.infinispan.KeycloakHotRodMarshallerFactory")
 /subsystem=infinispan/cache-container=keycloak/distributed-cache=sessions/store=remote/property=protocolVersion:add(value="2.6")
@@ -67,9 +72,9 @@ module add --name=com.oracle.jdbc --resources=/opt/eap/extensions/ojdbc8.jar --d
 /subsystem=infinispan/cache-container=keycloak/replicated-cache=work/store=remote/property=rawValues:add(value=true)
 /subsystem=infinispan/cache-container=keycloak/replicated-cache=work/store=remote/property=marshaller:add(value="org.keycloak.cluster.infinispan.KeycloakHotRodMarshallerFactory")
 /subsystem=infinispan/cache-container=keycloak/replicated-cache=work/store=remote/property=protocolVersion:add(value="2.6")
-
+run-batch
 ### enable logging
-
+batch
 /subsystem=logging/logger=org.keycloak.cluster.infinispan:add(level="$\{env.INFINISPAN_LOG_LEVEL\}")
 /subsystem=logging/logger=org.keycloak.connections.infinispan:add(level="$\{env.INFINISPAN_LOG_LEVEL\}")
 /subsystem=logging/logger=org.keycloak.models.cache.infinispan:add(level="$\{env.INFINISPAN_LOG_LEVEL\}")
