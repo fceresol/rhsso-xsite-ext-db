@@ -55,7 +55,7 @@ objects:
     - port: 8660
       targetPort: 8660
       # Optional fixed nodePort to make debugging easier.
-      nodePort: 32660
+      nodePort: ${JBOSS_BIND_EXT_PORT}
     type: NodePort
     selector:
       deploymentConfig: ${APPLICATION_NAME}
@@ -114,12 +114,14 @@ objects:
             value: openshift.DNS_PING
           - name: JBOSS_RELAY_SITE_LOCAL
             value: ${JBOSS_RELAY_SITE_LOCAL}
-          - name: JBOSS_RELAY_SITE1
-            value: ${JBOSS_RELAY_SITE1}
-          - name: JBOSS_RELAY_SITE2
-            value: ${JBOSS_RELAY_SITE2}
+          - name: JBOSS_BIND_EXT_PORT
+            value: ${JBOSS_BIND_EXT_PORT}
+          - name: JBOSS_BIND_EXT_ADDRESS
+            value: ${JBOSS_BIND_EXT_ADDRESS}
           - name: JBOSS_RELAY_GLOBAL_CLUSTER
             value: ${JBOSS_RELAY_GLOBAL_CLUSTER}
+          - name: JAVA_OPTS_APPEND
+            value: -Djboss.bind.ext_address=${JBOSS_BIND_EXT_ADDRESS} -Djboss.bind.ext_port=${JBOSS_BIND_EXT_PORT} -Djboss.relay.site.local=${JBOSS_RELAY_SITE_LOCAL}
           - name: USERNAME
             valueFrom:
               secretKeyRef:
@@ -240,13 +242,13 @@ parameters:
   displayName: Local site name
   name: JBOSS_RELAY_SITE_LOCAL
   required: true
-- description: Site 1 name
-  displayName: Site 1 name
-  name: JBOSS_RELAY_SITE1
+- description: NodePort Bind address for XSite replica
+  displayName: NodePort Bind address
+  name: JBOSS_BIND_EXT_ADDRESS
   required: true
-- description: Site 2 name
-  displayName: Site 2 name
-  name: JBOSS_RELAY_SITE2
+- description: NodePort Bind port for XSite replica
+  displayName: NodePort Bind port
+  name: JBOSS_BIND_EXT_PORT
   required: true
 - description: Address list used for discovery.
   displayName: Discovery address
