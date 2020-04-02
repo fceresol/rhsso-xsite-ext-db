@@ -8,14 +8,12 @@ server {
         include      /opt/app-root/etc/nginx.default.d/*.conf;
 
         location / {
-          proxy_set_header  Host $host;
+          proxy_set_header  Host $DEV_PORTAL_URL;
           proxy_set_header  X-Real-IP $remote_addr;
           proxy_set_header  X-Forwarded-Proto https;
           proxy_set_header  X-Forwarded-For $remote_addr;
           proxy_set_header  X-Forwarded-Host $remote_addr;
-          proxy_pass $DEV_PORTAL_URL;
-          proxy_redirect $DEV_PORTAL_URL https://$host;
-          sub_filter     '$DEV_PORTAL_URL'    'https://$host/';
-          sub_filter_once off;
+          proxy_pass https://$DEV_PORTAL_URL;
+          proxy_redirect https://$DEV_PORTAL_URL https://$host;
         }
 }
