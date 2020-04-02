@@ -1,0 +1,6 @@
+oc new-app registry.access.redhat.com/rhscl/nginx-116-rhel7~./webfolder --name=nginxbase
+
+oc new-app --strategy=docker nginxbase~. --name=myReverseProxy
+
+oc start-build reverseproxy --from-dir=.
+
